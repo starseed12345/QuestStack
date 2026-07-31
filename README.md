@@ -1,5 +1,9 @@
 # QuestStack
 
+## Current Details
+
+Expected Release ETA 7-21 Days
+
 ## Before we start
 
 Supported:
