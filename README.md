@@ -1,5 +1,16 @@
 # QuestStack
 
+## Before we start
+
+Supported:
+✅ Quest 1
+✅ Firmware: 49845030443200410 (Latest)
+
+Not supported:
+❌ Quest 2
+❌ Quest Pro
+❌ Any other headset
+
 QuestStack is a Meta Quest 1 root and bootloader unlocking project.
 
 Using the GhostLock privilege escalation chain and the CVE-2021-1931 ABL/fastboot vulnerability, QuestStack provides a method to gain root access on the latest Quest 1 firmware, replace the stock ABL image with a vulnerable version, and unlock the device bootloader.
