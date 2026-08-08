@@ -55,6 +55,10 @@ If you're looking for help consider joining this server https://discord.gg/6JSH8
 
 Built using research and tools from the Android security and VR development communities specifically (FreeXR), including previous Quest bootloader unlocking work.
 
+## License
+
+QuestStack is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
+
 ## Disclaimer
 
 This project is provided for educational and research purposes. Modifying bootloader state or system software can permanently affect your device. Use at your own risk.
