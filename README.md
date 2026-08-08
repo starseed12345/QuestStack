@@ -4,6 +4,11 @@
 
 Expected Release ETA 7-21 Days
 
+# Known Limitations
+
+The exploit is currently lottery-based therefore it can succeed in either a minute to 10 hours (about 1 in 450 boots)
+We are still actively researching a way to reduce this number but unfortunately due to the old kernel of the Q1 this isn't as easy.
+
 ## Before we start
 
 Supported:
