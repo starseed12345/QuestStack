@@ -51,6 +51,10 @@ QuestStack will perform the required steps to gain root access, replace the ABL 
 
 If you're looking for help consider joining this server https://discord.gg/6JSH88u2Rd
 
+## Speculations
+
+Quest 2 Devices running V59 or lower have a similar chance of having this work as intended to unlock the bootloader but the chance of bricking outweighs the benefit of unlocking the bootloader.
+
 ## Credits
 
 Built using research and tools from the Android security and VR development communities specifically (FreeXR), including previous Quest bootloader unlocking work.
