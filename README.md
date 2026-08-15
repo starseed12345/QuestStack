@@ -2,7 +2,7 @@
 
 ## Current Details
 
-Expected Release ETA 5-7
+Status: Work In Progress (Research ongoing root attained)
 
 # Known Limitations
 
