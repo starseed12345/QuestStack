@@ -2,7 +2,7 @@
 
 ## Current Details
 
-Expected Release ETA 7-21 Days
+Expected Release ETA 5-7
 
 # Known Limitations
 
