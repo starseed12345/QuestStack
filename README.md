@@ -8,7 +8,7 @@ The project combines Quest firmware research, root access, ABL modification, and
 
 ## Current Details
 
-> Status: Work In Progress (Research ongoing root attained)
+> Status: Work In Progress (Managed to unlock bootloader + root)
 
 ## Before we start
 
@@ -22,12 +22,6 @@ The project combines Quest firmware research, root access, ABL modification, and
 * ❌ Quest 2
 * ❌ Quest Pro
 * ❌ Any other headset
-
-## Known Limitations
-
-The exploit is currently lottery-based therefore it can succeed in either a minute to 10 hours (about 1 in 450 boots)
-
-We are still actively researching a way to reduce this number but unfortunately due to the old kernel of the Q1 this isn't as easy.
 
 ## Instructions
 
