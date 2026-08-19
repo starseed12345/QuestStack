@@ -47,6 +47,7 @@ After installing the firmware:
 2. Ensure ADB is enabled and working.
 3. Run QuestStack.
 4. Wait for the process to complete.
+5. Once completed sideload your preferred update as the current slot is NOT bootable.
 
 QuestStack will perform the required steps to gain root access, replace the ABL image, and continue the bootloader unlocking process.
 
