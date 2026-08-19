@@ -8,7 +8,7 @@ The project combines Quest firmware research, root access, ABL modification, and
 
 ## Current Details
 
-> Status: Work In Progress (Managed to unlock bootloader + root)
+> Status: Released
 
 ## Before we start
 
