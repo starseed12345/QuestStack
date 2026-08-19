@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <IncludeSymbols>false</IncludeSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LibUsbDotNet" Version="2.2.85" />
+    <PackageReference Include="SharpCompress" Version="0.50.1" />
+    <PackageReference Include="UsbDotNet.LibUsbNative" Version="1.3.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="tools\platform-tools\**\*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <EmbeddedResource Include="tools\platform-tools\win-x64\adb.exe" LogicalName="QuestStack.PlatformTools.adb.exe" />
+    <EmbeddedResource Include="tools\platform-tools\win-x64\AdbWinApi.dll" LogicalName="QuestStack.PlatformTools.AdbWinApi.dll" />
+    <EmbeddedResource Include="tools\platform-tools\win-x64\AdbWinUsbApi.dll" LogicalName="QuestStack.PlatformTools.AdbWinUsbApi.dll" />
+    <EmbeddedResource Include="tools\platform-tools\win-x64\libwinpthread-1.dll" LogicalName="QuestStack.PlatformTools.libwinpthread-1.dll" />
+    <EmbeddedResource Include="tools\platform-tools\win-x64\NOTICE.txt" LogicalName="QuestStack.PlatformTools.NOTICE.txt" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+    <EmbeddedResource Include="tools\platform-tools\linux-x64\adb" LogicalName="QuestStack.PlatformTools.adb" />
+    <EmbeddedResource Include="tools\platform-tools\linux-x64\NOTICE.txt" LogicalName="QuestStack.PlatformTools.NOTICE.txt" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' or '$(RuntimeIdentifier)' == 'osx-arm64'">
+    <EmbeddedResource Include="tools\platform-tools\osx-universal\adb" LogicalName="QuestStack.PlatformTools.adb" />
+    <EmbeddedResource Include="tools\platform-tools\osx-universal\NOTICE.txt" LogicalName="QuestStack.PlatformTools.NOTICE.txt" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+    <Content Include="native\linux-x64\libusb-1.0.so">
+      <TargetPath>libusb-1.0.so</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+</Project>
