@@ -63,7 +63,7 @@ Quest 2 Devices running V59 or lower have a similar chance of having this work a
 
 ## Credits
 
-Built using research and tools from the Android security and VR development communities specifically (FreeXR), including previous Quest bootloader unlocking work.
+Built using research and tools from the Android security and VR development communities specifically (FreeXR), including previous Quest bootloader unlocking work from darknight https://github.com/darknight1050/quest-bootloader-unlocker.
 
 ## License
 
