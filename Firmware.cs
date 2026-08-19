@@ -62,9 +62,9 @@ internal static class Firmware
 
     public static string? DownloadAndExtract(string workDir)
     {
-        string zipPath = Path.Combine(workDir, "quest1_v16_new.zip");
+        string zipPath = Path.Combine(workDir, "fcpm6p.zip");
         string partialZipPath = zipPath + ".partial";
-        string extractDir = Path.Combine(workDir, "quest1_v16_new");
+        string extractDir = Path.Combine(workDir, "fcpm6p");
 
         if (IsBundleComplete(extractDir))
         {
