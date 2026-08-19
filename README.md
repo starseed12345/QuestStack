@@ -1,74 +1,74 @@
 # QuestStack
 
-QuestStack automates the Quest 1 root, vulnerable boot-firmware downgrade, and CVE-2021-1931 bootloader unlock flow.
+QuestStack is a Meta Quest 1 root and bootloader unlocking project.
 
-## Modes
+Using the GhostLock privilege escalation chain and the CVE-2021-1931 ABL/fastboot vulnerability, QuestStack provides a method to gain root access on the latest Quest 1 firmware, replace the stock ABL image with a vulnerable version, and unlock the device bootloader.
 
-Run without arguments for the interactive menu, or choose a mode explicitly:
+The project combines Quest firmware research, root access, ABL modification, and fastboot unlocking into a single process aimed at giving developers and enthusiasts full control over Quest 1 hardware.
 
-```powershell
-QuestStack.exe --full
-QuestStack.exe --unlock-only
-QuestStack.exe --unlock-only --abl C:\path\to\abl.img
+## Current Details
+
+> Status: Work In Progress (Managed to unlock bootloader + root)
+
+## Before we start
+
+### Supported:
+
+* ✅ Quest 1
+* ✅ Firmware: 49845030443200410 (Latest)
+
+### Not supported:
+
+* ❌ Quest 2
+* ❌ Quest Pro
+* ❌ Any other headset
+
+## Instructions
+
+Check your current installed firmware version:
+
+```bash
+adb shell getprop ro.build.version.incremental
 ```
 
-`--full` runs the ADB, root, inactive-slot flash, verification, slot switch, and unlock flow.
+The required firmware version is:
 
-`--unlock-only` skips ADB, rooting, flashing, slot changes, and automatic reboots. Use it when the headset is already running a supported vulnerable ABL and is in fastboot. Without `--abl`, QuestStack downloads the checked firmware bundle and uses its ABL image.
-
-Prompts accept `Y` or `N` immediately. Enter is not required.
-
-## Fastboot behavior
-
-QuestStack does not automatically reboot into fastboot. In the full flow it reboots normally, pauses so the headset can finish starting, and then waits for manual fastboot entry.
-
-The unlock implementation:
-
-1. Reads the build number directly from the Quest fastboot USB interface.
-2. Selects the matching Quest 1 patch offset.
-3. Extracts LinuxLoader from the LZMA-compressed UEFI section in `abl.img`.
-4. Validates the original instruction bytes before patching.
-5. Checks every USB transfer and fastboot response.
-6. Reports success only after fastboot returns `Device unlocked: true`.
-
-## Requirements
-
-- Windows x64, Linux x64, or macOS x64/ARM64
-- Windows: a WinUSB/libusb-compatible driver for the Quest fastboot interface
-- Linux: USB permissions for the Quest fastboot interface, normally through a udev rule
-- A supported Quest 1 starting firmware for the full flow
-
-Release builds are self-contained and include the .NET runtime, Android Platform-Tools ADB 37.0.1, and the matching native libusb library. No separate .NET, ADB, or libusb installation is required. Linux still uses the operating system's standard glibc and `libudev.so.1` interfaces.
-
-Bootloader and partition changes can make a device unbootable. Keep the on-device backups and do not switch slots if flashing or verification fails.
-
-## Validation
-
-Run the offline regression checks with:
-
-```powershell
-QuestStack.exe --self-test
+```text
+49845030443200410
 ```
 
-To also validate extraction against a real firmware bundle:
+If your device is not on this firmware version, reboot into "USB Update Mode" and sideload the required firmware package.
 
-```powershell
-QuestStack.exe --self-test --abl C:\path\to\bundle\images\abl.img
-```
+https://files.cocaine.trade/firmware/meta/Quest/q1_49845030443200410.zip
 
-The self-test runs the bundled `adb version` command and calls into `libusb_get_version`, so it fails if either embedded dependency cannot load.
+After installing the firmware:
 
-## Single-file releases
+1. Boot the headset normally.
+2. Ensure ADB is enabled and working.
+3. Run QuestStack.
+4. Wait for the process to complete.
+5. Once completed sideload your preferred update as the current slot is NOT bootable.
 
-Publish each supported target with:
+QuestStack will perform the required steps to gain root access, replace the ABL image, and continue the bootloader unlocking process.
 
-```powershell
-dotnet publish -c Release -r win-x64 --self-contained true -o artifacts\win-x64
-dotnet publish -c Release -r linux-x64 --self-contained true -o artifacts\linux-x64
-dotnet publish -c Release -r osx-x64 --self-contained true -o artifacts\osx-x64
-dotnet publish -c Release -r osx-arm64 --self-contained true -o artifacts\osx-arm64
-```
+## Support
 
-Each output directory contains one executable. Windows names it `QuestStack.exe`; Linux and macOS name it `QuestStack`.
+If you're looking for help consider joining this server
 
-The bundled libusb library is licensed under LGPL-2.1-or-later. Its source and license are available from the [libusb project](https://github.com/libusb/libusb).
+https://discord.gg/6JSH88u2Rd
+
+## Speculations
+
+Quest 2 Devices running V59 or lower have a similar chance of having this work as intended to unlock the bootloader but the chance of bricking outweighs the benefit of unlocking the bootloader.
+
+## Credits
+
+Built using research and tools from the Android security and VR development communities specifically (FreeXR), including previous Quest bootloader unlocking work.
+
+## License
+
+QuestStack is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
+
+## Disclaimer
+
+> This project is provided for educational and research purposes. Modifying bootloader state or system software can permanently affect your device. Use at your own risk.
