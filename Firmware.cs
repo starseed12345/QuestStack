@@ -4,7 +4,7 @@ internal static class Firmware
 {
     private const string RequiredBuild = "49845030443200410";
 
-    private const string FirmwareUrl = "https://stuff.skystate.ch/quest1_v16_new.zip";
+    private const string FirmwareUrl = "https://files.catbox.moe/fcpm6p.zip";
     private const string DeviceTmpDir = "/data/local/tmp/v16";
     private const string DeviceImagesDir = "/data/local/tmp/v16/images";
     private const string RemoteBootctl = "/data/local/tmp/bootctl_shim";
