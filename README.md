@@ -27,6 +27,8 @@ The project combines Quest firmware research, root access, ABL modification, and
 
 If you prefer to do this with the website instead of app use -> https://quest1-unlock.skystate.ch/
 
+Credits: Darknight
+
 ## Instructions
 
 Check your current installed firmware version:
