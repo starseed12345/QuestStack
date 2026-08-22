@@ -23,6 +23,10 @@ The project combines Quest firmware research, root access, ABL modification, and
 * ❌ Quest Pro
 * ❌ Any other headset
 
+## Website Version
+
+If you prefer to do this with the website instead of app use -> https://quest1-unlock.skystate.ch/
+
 ## Instructions
 
 Check your current installed firmware version:
