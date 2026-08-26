@@ -9,6 +9,7 @@ The project combines Quest firmware research, root access, ABL modification, and
 ## Current Details
 
 > Status: Released
+> 90 HZ Possible. Check the Discord below
 
 ## Before we start
 
