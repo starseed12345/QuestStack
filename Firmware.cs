@@ -2,36 +2,36 @@ namespace QuestStack;
 
 internal static class Firmware
 {
-    private const string RequiredBuild = "49845030443200410";
+    internal const string RequiredBuild = "49845030443200410";
 
     private const string FirmwareUrl = "https://files.catbox.moe/fcpm6p.zip";
-    private const string DeviceTmpDir = "/data/local/tmp/v16";
+    private const string FirmwareArchiveSha256 = "7020F22D7CE788CE944E5CB04E5A89830B9A2F4D5AB11D5D08B01687FDC67501";
     private const string DeviceImagesDir = "/data/local/tmp/v16/images";
     private const string RemoteBootctl = "/data/local/tmp/bootctl_shim";
 
-    private static readonly string[] NosystemPartitions = new[]
+    internal static readonly string[] Partitions =
     {
         "boot", "modem", "pmic", "rpm", "tz", "hyp", "devcfg", "cmnlib",
         "cmnlib64", "keymaster", "ovrtz", "abl", "xbl"
     };
 
-    private static readonly IReadOnlyDictionary<string, string> ExpectedBundleMd5 =
+    private static readonly IReadOnlyDictionary<string, string> ExpectedBundleSha256 =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["bootctl_shim"] = "a1d4f5eeeed927a821e8c730e8bbe061",
-            ["images/abl.img"] = "a66adb03a16c792afb0db206acba3a42",
-            ["images/boot.img"] = "b3eac238af7164e83a5c4eaf37dea51b",
-            ["images/cmnlib.img"] = "09b36dd8a313fe8428b7f4b0c867ed34",
-            ["images/cmnlib64.img"] = "e4d05008ffc2ff8fe185717f2da44017",
-            ["images/devcfg.img"] = "8475c7edcb9c90e2ae0c5c2f03ce94e2",
-            ["images/hyp.img"] = "9b1e3f6ceb0b7143b6f9708833dd7f4c",
-            ["images/keymaster.img"] = "1067458d975d122923df9a1569464d53",
-            ["images/modem.img"] = "20f9a23819b4172a730ce4b7311eb9f2",
-            ["images/ovrtz.img"] = "3772e0505f2147820cb22a1de95cf394",
-            ["images/pmic.img"] = "39d7931e21b214506c40af6cb3ba0d20",
-            ["images/rpm.img"] = "344cb241834def92d9dc93c09435a146",
-            ["images/tz.img"] = "b5ff998224d6348dfb4fdf1c79dad9e4",
-            ["images/xbl.img"] = "287d1849a8d0c66d44ee59932f4ba73e"
+            ["bootctl_shim"] = "A5A5A201C5D4318015B1F646729A5EC3AB8EEE3BC2B856F46ED6EA887D225FCF",
+            ["images/abl.img"] = "C2CC1F173BEC2956FA5E068ABC98DB82E1CD2C651A4F4BB7AE31C79605E43707",
+            ["images/boot.img"] = "A1BF0F8ABD84779F7EB8B26794209FA96290F66C5232609999A4D01AF39F986D",
+            ["images/cmnlib.img"] = "DD186828E790F7DD547F002AD0FB46F76037E080BCD4E70C7CDDA901F68BD685",
+            ["images/cmnlib64.img"] = "8E62871F97BF99BE78A92BA06B2F51C705C57C50DF1DDEC40E995B135F63A6E1",
+            ["images/devcfg.img"] = "69A7D7A6656B077B511910E6EFAA31E771E7ED24BA80F0C1C694FB164F16575A",
+            ["images/hyp.img"] = "E14251A9E7932C1FFD2C3C90C000382144A94CE51712177A24C853C58E3055CC",
+            ["images/keymaster.img"] = "EBAA111A767E1E393133B9C88E54EFEC32AA143E1FFFB77297DCC3A317C22F3C",
+            ["images/modem.img"] = "D8E94155770106D0A615B25E60DEC63B4B17384B442F51BD57E561F3A7ACE25D",
+            ["images/ovrtz.img"] = "41AFD6068117DAD22315BEBC478F8749F2F505D25A6C27EA7ACE4A152F054F9B",
+            ["images/pmic.img"] = "57DAEEB2903E01BBE932DAA8D15129DCF210275B200F696ED2F4C612A4698BF5",
+            ["images/rpm.img"] = "85C4D8ED165A9295A46F20C9C8BD485C42B3B7CD60E832C9C0DA0B933DCC5B23",
+            ["images/tz.img"] = "A1548108AD612DDE59F69ED85CEF99A312C761DD3B2EECCE3DF6602E96D28A10",
+            ["images/xbl.img"] = "6ED2C6854F4837710B4B3BA31DA33820E80841C7F3E69678A680D821EFABCA63"
         };
 
     public static bool CheckFirmwareVersion()
@@ -77,9 +77,16 @@ internal static class Firmware
 
         if (File.Exists(zipPath))
         {
-            Logger.Info("Extracting the cached v29 firmware bundle...");
-            if (TryExtractBundle(zipPath, extractDir))
-                return extractDir;
+            if (HashMatches(zipPath, FirmwareArchiveSha256))
+            {
+                Logger.Info("Extracting the SHA-256 verified v29 firmware bundle...");
+                if (TryExtractBundle(zipPath, extractDir))
+                    return extractDir;
+            }
+            else
+            {
+                Logger.Warn("The cached firmware archive failed SHA-256 verification.");
+            }
 
             Logger.Warn("The cached archive is invalid. Downloading it again.");
             if (Directory.Exists(extractDir)) Directory.Delete(extractDir, true);
@@ -103,6 +110,7 @@ internal static class Firmware
 
             byte[] buffer = new byte[81920];
             long downloaded = 0;
+            int lastReportedPercent = -10;
             int read;
             while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
             {
@@ -112,16 +120,19 @@ internal static class Firmware
                 if (totalBytes.HasValue)
                 {
                     int pct = (int)(downloaded * 100 / totalBytes.Value);
-                    Console.Write($"\r[*] Downloaded {downloaded / 1024 / 1024}MB / {totalBytes.Value / 1024 / 1024}MB ({pct}%)");
-                }
-                else
-                {
-                    Console.Write($"\r[*] Downloaded {downloaded / 1024 / 1024}MB");
+                    if (pct >= lastReportedPercent + 10)
+                    {
+                        Logger.Info($"Firmware download: {pct}% ({downloaded / 1024 / 1024} MiB)");
+                        lastReportedPercent = pct;
+                    }
                 }
             }
-            Console.WriteLine();
             fs.Flush(flushToDisk: true);
             fs.Dispose();
+
+            if (!HashMatches(partialZipPath, FirmwareArchiveSha256))
+                throw new InvalidDataException("The downloaded firmware archive failed SHA-256 verification.");
+
             File.Move(partialZipPath, zipPath, overwrite: true);
         }
         catch (Exception ex)
@@ -165,7 +176,7 @@ internal static class Firmware
 
     internal static bool ValidateBundle(string extractDir, bool logErrors)
     {
-        foreach ((string relativePath, string expectedHash) in ExpectedBundleMd5)
+        foreach ((string relativePath, string expectedHash) in ExpectedBundleSha256)
         {
             string localPath = Path.Combine(extractDir, relativePath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(localPath))
@@ -177,7 +188,7 @@ internal static class Firmware
             try
             {
                 using FileStream stream = File.OpenRead(localPath);
-                string actualHash = Convert.ToHexString(System.Security.Cryptography.MD5.HashData(stream)).ToLowerInvariant();
+                string actualHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream));
                 if (!string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase))
                 {
                     if (logErrors) Logger.Error($"Firmware bundle checksum mismatch: {relativePath}");
@@ -193,6 +204,8 @@ internal static class Firmware
 
         return true;
     }
+
+    internal static bool ValidateArchive(string archivePath) => HashMatches(archivePath, FirmwareArchiveSha256);
 
     public static int GetCurrentSlot()
     {
@@ -213,7 +226,15 @@ internal static class Firmware
         return -1;
     }
 
-    public static string SlotSuffix(int slot) => slot == 0 ? "_a" : "_b";
+    public static string SlotSuffix(int slot)
+    {
+        return slot switch
+        {
+            0 => "_a",
+            1 => "_b",
+            _ => throw new ArgumentOutOfRangeException(nameof(slot), slot, "A/B slot must be 0 or 1.")
+        };
+    }
 
     public static bool PushFiles(string firmwareDir, string bootctlPath)
     {
@@ -240,11 +261,12 @@ internal static class Firmware
         }
 
         string imagesDir = Path.Combine(firmwareDir, "images");
-        string[] imgFiles = Directory.GetFiles(imagesDir, "*.img");
+        string[] imgFiles = Partitions.Select(partition => Path.Combine(imagesDir, partition + ".img")).ToArray();
 
-        if (imgFiles.Length == 0)
+        string? missingImage = imgFiles.FirstOrDefault(path => !File.Exists(path));
+        if (missingImage != null)
         {
-            Logger.Error($"No firmware images were found in {imagesDir}.");
+            Logger.Error($"Required firmware image is missing: {missingImage}");
             return false;
         }
 
@@ -264,7 +286,6 @@ internal static class Firmware
 
         Logger.Info("Verifying pushed files...");
 
-        using var md5 = System.Security.Cryptography.MD5.Create();
         bool pushOk = true;
 
         foreach (string imgPath in imgFiles)
@@ -272,13 +293,14 @@ internal static class Firmware
             string fileName = Path.GetFileName(imgPath);
             string remotePath = $"{DeviceImagesDir}/{fileName}";
 
-            byte[] localHash = md5.ComputeHash(File.ReadAllBytes(imgPath));
-            string localHex = Convert.ToHexString(localHash).ToLowerInvariant();
+            string localHex = HashFile(imgPath);
 
-            var (c, o) = Adb.Shell($"md5sum {remotePath} 2>/dev/null | cut -d' ' -f1", 10_000);
-            string remoteHex = o.Trim().Split('\n')[0].Trim().ToLowerInvariant();
+            var (c, o) = Adb.Shell($"sha256sum {remotePath} 2>/dev/null | cut -c1-64", 30_000);
+            string remoteHex = o.Trim().Split('\n')[0].Trim();
 
-            if (c == 0 && localHex == remoteHex && !string.IsNullOrEmpty(localHex))
+            if (c == 0 &&
+                !string.IsNullOrEmpty(localHex) &&
+                string.Equals(localHex, remoteHex, StringComparison.OrdinalIgnoreCase))
             {
                 Logger.Info($"  {fileName}: OK");
             }
@@ -304,7 +326,7 @@ internal static class Firmware
         string suffix = SlotSuffix(targetSlot);
         Logger.Info($"Checking images for slot {suffix.TrimStart('_')}...");
 
-        foreach (string part in NosystemPartitions)
+        foreach (string part in Partitions)
         {
             string imgFile = $"{DeviceImagesDir}/{part}.img";
             string blockDev = $"/dev/block/bootdevice/by-name/{part}{suffix}";
@@ -349,107 +371,38 @@ internal static class Firmware
         return true;
     }
 
-    public static bool BackupPartitions(int targetSlot)
-    {
-        string suffix = SlotSuffix(targetSlot);
-        string bakDir = $"{DeviceTmpDir}/bak";
-        var (mkdirCode, mkdirOutput) = Adb.Shell($"mkdir -p {bakDir}");
-        if (mkdirCode != 0)
-        {
-            Logger.Error($"Could not create the backup directory: {mkdirOutput}");
-            return false;
-        }
-
-        Logger.Info($"Backing up slot {suffix.TrimStart('_')} partitions...");
-
-        foreach (string part in NosystemPartitions)
-        {
-            string blockDev = $"/dev/block/bootdevice/by-name/{part}{suffix}";
-            string bakFile = $"{bakDir}/{part}{suffix}.img";
-
-            Logger.Info($"  Backing up {part}...");
-            var (code, output) = Adb.Shell(
-                $"dd if={blockDev} of={bakFile} bs=1M 2>/dev/null && sync && [ -s {bakFile} ]",
-                120_000);
-            if (code != 0)
-            {
-                Logger.Error($"Backup failed for {part}: {output}");
-                return false;
-            }
-        }
-
-        Logger.Success("Backup complete.");
-        return true;
-    }
-
     public static bool FlashPartitions(int targetSlot)
     {
         string suffix = SlotSuffix(targetSlot);
         Logger.Info($"Flashing v29 firmware to slot {suffix.TrimStart('_')}...");
 
-        string flashScript = Path.Combine(Path.GetTempPath(), "queststack", "flash.sh");
-        File.WriteAllText(flashScript, @"#!/system/bin/sh
-IMG_DIR=""$1""
-BLOCK_DIR=""$2""
-SLOT=""$3""
-failed=0
-for p in boot modem pmic rpm tz hyp devcfg cmnlib cmnlib64 keymaster ovrtz abl xbl; do
-    img=""$IMG_DIR/$p.img""
-    blk=""$BLOCK_DIR/${p}${SLOT}""
-    [ -f ""$img"" ] || { echo ""FAIL $p missing image""; failed=1; continue; }
-    [ -b ""$blk"" ] || { echo ""FAIL $p missing block device""; failed=1; continue; }
-    echo ""FLASH $p""
-    dd if=""$img"" of=""$blk"" bs=1M conv=fsync 2>&1
-    if [ $? -ne 0 ]; then
-        echo ""RETRY $p""
-        dd if=""$img"" of=""$blk"" bs=1M 2>&1
-        if [ $? -ne 0 ]; then
-            echo ""FAIL $p write failed""
-            failed=1
-        fi
-    fi
-done
-sync || failed=1
-[ ""$failed"" -eq 0 ] || { echo ""FLASH_FAILED""; exit 1; }
-echo ""FLASH_DONE""
-");
-
-        var (pushCode, pushOutput) = Adb.Push(flashScript, "/data/local/tmp/flash.sh", 10_000);
-        if (pushCode != 0)
+        foreach (string partition in Partitions)
         {
-            Logger.Error($"Could not push the flash script: {pushOutput}");
-            return false;
-        }
+            Logger.Info($"  {partition}: writing...");
+            bool written = false;
 
-        var (chmodCode, chmodOutput) = Adb.Shell("chmod 755 /data/local/tmp/flash.sh");
-        if (chmodCode != 0)
-        {
-            Logger.Error($"Could not make the flash script executable: {chmodOutput}");
-            return false;
-        }
+            for (int attempt = 1; attempt <= 2; attempt++)
+            {
+                var (code, output) = Adb.Shell(BuildFlashPartitionCommand(partition, suffix), 300_000);
+                if (code == 0 &&
+                    output.Contains("WRITE_EXIT=0", StringComparison.Ordinal) &&
+                    output.Contains("SYNC_EXIT=0", StringComparison.Ordinal))
+                {
+                    written = true;
+                    Logger.Success($"  {partition}: write completed.");
+                    break;
+                }
 
-        var (code, output) = Adb.Shell($"/data/local/tmp/flash.sh {DeviceImagesDir} /dev/block/bootdevice/by-name {suffix}", 600_000);
+                Logger.Warn($"  {partition}: write attempt {attempt}/2 failed.");
+                if (!string.IsNullOrWhiteSpace(output))
+                    Logger.Warn(output);
+            }
 
-        foreach (var line in output.Split('\n'))
-        {
-            if (line.StartsWith("FLASH ", StringComparison.Ordinal) && !line.Contains("DONE", StringComparison.Ordinal))
-                Logger.Info($"  {line.Substring(6)}: flashing...");
-            else if (line.StartsWith("RETRY ", StringComparison.Ordinal))
-                Logger.Warn($"  {line.Substring(6)}: retrying...");
-            else if (line.StartsWith("FAIL ", StringComparison.Ordinal))
-                Logger.Error($"  {line.Substring(5)}");
-            else if (line.Contains("error", StringComparison.OrdinalIgnoreCase) || line.Contains("No space", StringComparison.OrdinalIgnoreCase))
-                Logger.Error($"  {line}");
-        }
-
-        if (code != 0 ||
-            !output.Contains("FLASH_DONE", StringComparison.Ordinal) ||
-            output.Contains("FLASH_FAILED", StringComparison.Ordinal) ||
-            output.Split('\n').Any(line => line.StartsWith("FAIL ", StringComparison.Ordinal)))
-        {
-            Logger.Error("Flash script did not complete.");
-            Logger.Error(output);
-            return false;
+            if (!written)
+            {
+                Logger.Error($"Could not write {partition}{suffix}. Stopping before the slot is activated.");
+                return false;
+            }
         }
 
         Logger.Success("Flash complete.");
@@ -461,73 +414,22 @@ echo ""FLASH_DONE""
         string suffix = SlotSuffix(targetSlot);
         Logger.Info($"Verifying flashed partitions on slot {suffix.TrimStart('_')}...");
 
-        string scriptPath = Path.Combine(Path.GetTempPath(), "queststack", "verify.sh");
-        File.WriteAllText(scriptPath, @"#!/system/bin/sh
-IMG_DIR=""$1""
-BLOCK_DIR=""$2""
-failed=0
-for p in boot modem pmic rpm tz hyp devcfg cmnlib cmnlib64 keymaster ovrtz abl xbl; do
-    img=""$IMG_DIR/$p.img""
-    blk=""$BLOCK_DIR/${p}$3""
-    [ -f ""$img"" ] || { echo ""MISSING $p image""; failed=1; continue; }
-    [ -b ""$blk"" ] || { echo ""MISSING $p block device""; failed=1; continue; }
-    n=$(stat -c%s ""$img"" 2>/dev/null || wc -c < ""$img"")
-    a=$(md5sum ""$img"" | cut -d' ' -f1)
-    b=$(dd if=""$blk"" bs=4096 count=$((n/4096+1)) 2>/dev/null | head -c ""$n"" | md5sum | cut -d' ' -f1)
-    if [ ""$a"" = ""$b"" ]; then echo ""OK $p""
-    else echo ""MISMATCH $p img=$a part=$b""; failed=1; fi
-done
-[ ""$failed"" -eq 0 ]
-");
-
-        var (pushCode, pushOutput) = Adb.Push(scriptPath, "/data/local/tmp/verify.sh", 10_000);
-        if (pushCode != 0)
+        foreach (string partition in Partitions)
         {
-            Logger.Error($"Could not push the verification script: {pushOutput}");
-            return false;
+            Logger.Info($"  {partition}: reading back and hashing...");
+            var (code, output) = Adb.Shell(BuildVerifyPartitionCommand(partition, suffix), 300_000);
+            if (code != 0 || !output.Contains("VERIFY_OK", StringComparison.Ordinal))
+            {
+                Logger.Error($"  {partition}: verification failed.");
+                Logger.Error(output);
+                return false;
+            }
+
+            Logger.Success($"  {partition}: verified.");
         }
 
-        var (chmodCode, chmodOutput) = Adb.Shell("chmod 755 /data/local/tmp/verify.sh");
-        if (chmodCode != 0)
-        {
-            Logger.Error($"Could not make the verification script executable: {chmodOutput}");
-            return false;
-        }
-
-        var (code, output) = Adb.Shell($"/data/local/tmp/verify.sh {DeviceImagesDir} /dev/block/bootdevice/by-name {suffix}", 300_000);
-
-        bool allGood = code == 0;
-        int verifiedCount = 0;
-        foreach (var line in output.Split('\n'))
-        {
-            if (line.StartsWith("OK ", StringComparison.Ordinal))
-            {
-                Logger.Info($"  {line.Substring(3)}: OK");
-                verifiedCount++;
-            }
-            else if (line.StartsWith("MISMATCH ", StringComparison.Ordinal))
-            {
-                Logger.Error($"  {line.Substring(9)}");
-                allGood = false;
-            }
-            else if (line.StartsWith("MISSING ", StringComparison.Ordinal))
-            {
-                Logger.Error($"  {line}");
-                allGood = false;
-            }
-            else if (!string.IsNullOrWhiteSpace(line))
-                Logger.Warn($"  {line}");
-        }
-
-        if (verifiedCount != NosystemPartitions.Length)
-            allGood = false;
-
-        if (allGood)
-            Logger.Success("All partitions verified.");
-        else
-            Logger.Error("Some partitions failed verification.");
-
-        return allGood;
+        Logger.Success("All partitions verified.");
+        return true;
     }
 
     public static bool SwitchSlot(int targetSlot)
@@ -553,16 +455,44 @@ done
         return false;
     }
 
-    public static bool Reboot()
+    internal static string BuildFlashPartitionCommand(string partition, string suffix)
     {
-        Logger.Info("Rebooting device...");
-        var (code, output) = Adb.Run("reboot", 10_000);
-        if (code != 0)
+        string image = $"{DeviceImagesDir}/{partition}.img";
+        string block = $"/dev/block/bootdevice/by-name/{partition}{suffix}";
+        return $"img='{image}'; blk='{block}'; " +
+               "dd if=\"$img\" of=\"$blk\" bs=1M 2>&1; write_rc=$?; " +
+               "sync; sync_rc=$?; echo WRITE_EXIT=$write_rc; echo SYNC_EXIT=$sync_rc; " +
+               "[ \"$write_rc\" -eq 0 ] && [ \"$sync_rc\" -eq 0 ]";
+    }
+
+    internal static string BuildVerifyPartitionCommand(string partition, string suffix)
+    {
+        string image = $"{DeviceImagesDir}/{partition}.img";
+        string block = $"/dev/block/bootdevice/by-name/{partition}{suffix}";
+        return $"img='{image}'; blk='{block}'; " +
+               "n=$(stat -c %s \"$img\" 2>/dev/null || wc -c < \"$img\"); " +
+               "image_hash=$(sha256sum \"$img\" | cut -c1-64); " +
+               "block_hash=$(dd if=\"$blk\" bs=4096 count=$(((n+4095)/4096)) 2>/dev/null | head -c \"$n\" | sha256sum | cut -c1-64); " +
+               "echo IMAGE_HASH=$image_hash; echo BLOCK_HASH=$block_hash; " +
+               "[ -n \"$image_hash\" ] && [ \"$image_hash\" = \"$block_hash\" ] && echo VERIFY_OK";
+    }
+
+    private static bool HashMatches(string path, string expectedSha256)
+    {
+        try
         {
-            Logger.Error($"ADB reboot failed: {output}");
+            return string.Equals(HashFile(path), expectedSha256, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
             return false;
         }
-
-        return true;
     }
+
+    private static string HashFile(string path)
+    {
+        using FileStream stream = File.OpenRead(path);
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream));
+    }
+
 }

@@ -1,52 +1,33 @@
 namespace QuestStack;
 
+internal enum LogLevel
+{
+    Info,
+    Success,
+    Warning,
+    Error,
+    Step
+}
+
+internal sealed record LogEntry(DateTimeOffset Timestamp, LogLevel Level, string Message);
+
 internal static class Logger
 {
-    public static void Info(string msg)
+    public static event Action<LogEntry>? EntryWritten;
+
+    public static void Info(string message) => Write(LogLevel.Info, message);
+    public static void Success(string message) => Write(LogLevel.Success, message);
+    public static void Warn(string message) => Write(LogLevel.Warning, message);
+    public static void Error(string message) => Write(LogLevel.Error, message);
+
+    public static void Step(int current, int total, string message)
     {
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write("[*] ");
-        Console.ResetColor();
-        Console.WriteLine(msg);
+        Write(LogLevel.Step, $"{current}/{total}  {message}");
     }
 
-    public static void Success(string msg)
+    public static bool Confirm(string message)
     {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write("[+] ");
-        Console.ResetColor();
-        Console.WriteLine(msg);
-    }
-
-    public static void Warn(string msg)
-    {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write("[!] ");
-        Console.ResetColor();
-        Console.WriteLine(msg);
-    }
-
-    public static void Error(string msg)
-    {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.Write("[-] ");
-        Console.ResetColor();
-        Console.WriteLine(msg);
-    }
-
-    public static void Step(int current, int total, string msg)
-    {
-        Console.ForegroundColor = ConsoleColor.Magenta;
-        Console.Write($"[{current}/{total}] ");
-        Console.ResetColor();
-        Console.WriteLine(msg);
-    }
-
-    public static bool Confirm(string msg)
-    {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"[?] {msg} [Y/N] ");
-        Console.ResetColor();
+        Console.Write($"[?] {message} [Y/N] ");
         Console.Out.Flush();
 
         if (Console.IsInputRedirected)
@@ -85,12 +66,32 @@ internal static class Logger
         }
     }
 
-    public static void Pause(string msg)
+    private static void Write(LogLevel level, string message)
     {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"[?] {msg} Press Enter to continue: ");
-        Console.ResetColor();
-        Console.Out.Flush();
-        Console.ReadLine();
+        var entry = new LogEntry(DateTimeOffset.Now, level, message);
+        Action<LogEntry>? handlers = EntryWritten;
+
+        if (handlers == null)
+        {
+            try { Console.WriteLine($"{Prefix(level)} {message}"); } catch { }
+            return;
+        }
+
+        foreach (Action<LogEntry> handler in handlers.GetInvocationList().Cast<Action<LogEntry>>())
+        {
+            try { handler(entry); } catch { }
+        }
+    }
+
+    private static string Prefix(LogLevel level)
+    {
+        return level switch
+        {
+            LogLevel.Success => "[+]",
+            LogLevel.Warning => "[!]",
+            LogLevel.Error => "[-]",
+            LogLevel.Step => "[>]",
+            _ => "[*]"
+        };
     }
 }

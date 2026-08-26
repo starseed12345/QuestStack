@@ -21,7 +21,10 @@ internal static class BootloaderUnlocker
                 PatchBytes: [0xb6, 0x00, 0x00, 0x14])
         };
 
-    public static bool Unlock(string ablImagePath, int fastbootWaitSeconds = 180)
+    public static bool Unlock(
+        string ablImagePath,
+        int fastbootWaitSeconds = 180,
+        Action? fastbootDetected = null)
     {
         if (!File.Exists(ablImagePath))
         {
@@ -37,6 +40,7 @@ internal static class BootloaderUnlocker
             Logger.Error("Install the WinUSB/libusb driver for the Quest fastboot interface, then try again.");
             return false;
         }
+        fastbootDetected?.Invoke();
 
         Dictionary<string, string>? deviceInfo = device.GetDeviceInfo();
         if (deviceInfo == null)
@@ -70,11 +74,6 @@ internal static class BootloaderUnlocker
             return false;
 
         Logger.Warn("The next command modifies the in-memory fastboot code and requests an unlock.");
-        if (!Logger.Confirm("Send the verified exploit payload now?"))
-        {
-            Logger.Info("Unlock cancelled by user.");
-            return false;
-        }
 
         device.ClearReadBuffer();
         Logger.Info($"Sending {payload.Length:N0}-byte overflow payload...");
@@ -105,7 +104,6 @@ internal static class BootloaderUnlocker
 
         device.Close();
 
-        Logger.Info("If an unlock confirmation appears on the headset, approve it with the volume and power buttons.");
         Logger.Info("If the headset leaves fastboot, manually return to fastboot so the result can be verified.");
 
         if (!WaitForUnlockedState(TimeSpan.FromMinutes(3)))
@@ -265,7 +263,7 @@ internal static class BootloaderUnlocker
 
                     if (!sawLockedState)
                     {
-                        Logger.Warn("Fastboot is still reporting Device unlocked: false. Waiting for confirmation...");
+                        Logger.Warn("Fastboot is still reporting Device unlocked: false. Waiting for the state to update...");
                         sawLockedState = true;
                     }
                 }
