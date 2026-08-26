@@ -17,9 +17,31 @@ internal static class Adb
         }
         catch (Exception ex)
         {
-            return (-1, $"failed to prepare bundled adb: {ex.Message}");
+            return (-1, $"failed to prepare adb: {ex.Message}");
         }
 
+        return RunProcess(psi, timeoutMs);
+    }
+
+    private static (int exitCode, string output) RunArguments(IEnumerable<string> arguments, int timeoutMs)
+    {
+        ProcessStartInfo psi;
+        try
+        {
+            psi = CreateProcessStartInfo();
+            foreach (string argument in arguments)
+                psi.ArgumentList.Add(argument);
+        }
+        catch (Exception ex)
+        {
+            return (-1, $"failed to prepare adb: {ex.Message}");
+        }
+
+        return RunProcess(psi, timeoutMs);
+    }
+
+    private static (int exitCode, string output) RunProcess(ProcessStartInfo psi, int timeoutMs)
+    {
         Process? startedProcess;
         try
         {
@@ -93,7 +115,7 @@ internal static class Adb
 
     public static string? GetProp(string prop)
     {
-        var (code, output) = Run($"shell getprop {prop}");
+        var (code, output) = Shell($"getprop {prop}");
         if (code != 0) return null;
         var val = output.Trim();
         return string.IsNullOrEmpty(val) ? null : val;
@@ -101,12 +123,95 @@ internal static class Adb
 
     public static (int exitCode, string output) Shell(string command, int timeoutMs = 30_000)
     {
-        return Run($"shell {command}", timeoutMs);
+        return RunArguments(["shell", command], timeoutMs);
+    }
+
+    public static string? GetSerial()
+    {
+        var (code, output) = RunArguments(["get-serialno"], 10_000);
+        string value = output.Trim();
+        return code == 0 && value.Length > 0 && !value.Equals("unknown", StringComparison.OrdinalIgnoreCase)
+            ? value
+            : null;
     }
 
     public static (int exitCode, string output) Push(string localPath, string remotePath, int timeoutMs = 300_000)
     {
-        return Run($"push \"{localPath}\" {remotePath}", timeoutMs);
+        return RunArguments(["push", localPath, remotePath], timeoutMs);
+    }
+
+    public static bool ExecOutToFile(
+        IEnumerable<string> remoteArguments,
+        string destinationPath,
+        int timeoutMs,
+        out string output)
+    {
+        output = string.Empty;
+        ProcessStartInfo psi;
+        try
+        {
+            psi = CreateProcessStartInfo();
+            psi.ArgumentList.Add("exec-out");
+            foreach (string argument in remoteArguments)
+                psi.ArgumentList.Add(argument);
+        }
+        catch (Exception ex)
+        {
+            output = $"failed to prepare adb: {ex.Message}";
+            return false;
+        }
+
+        Process? startedProcess;
+        try
+        {
+            startedProcess = Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            output = $"failed to start adb: {ex.Message}";
+            return false;
+        }
+
+        using var process = startedProcess;
+        if (process == null)
+        {
+            output = "failed to start adb";
+            return false;
+        }
+
+        try
+        {
+            using FileStream destination = new(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            Task copyTask = process.StandardOutput.BaseStream.CopyToAsync(destination);
+            Task<string> stderrTask = process.StandardError.ReadToEndAsync();
+
+            if (!process.WaitForExit(timeoutMs))
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                output = "adb exec-out timed out";
+                return false;
+            }
+
+            copyTask.GetAwaiter().GetResult();
+            destination.Flush(flushToDisk: true);
+            output = ReadTask(stderrTask, 5_000).Trim();
+            return process.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            output = ex.Message;
+            return false;
+        }
+    }
+
+    public static bool RebootBootloader()
+    {
+        var (code, output) = RunArguments(["reboot", "bootloader"], 15_000);
+        if (code == 0)
+            return true;
+
+        Logger.Error($"Could not reboot into fastboot: {output}");
+        return false;
     }
 
     public static (int exitCode, string output) Remount(int timeoutMs = 15_000)
@@ -125,7 +230,7 @@ internal static class Adb
         }
         catch (Exception ex)
         {
-            Logger.Error($"Failed to prepare bundled adb: {ex.Message}");
+            Logger.Error($"Failed to prepare adb: {ex.Message}");
             return false;
         }
 

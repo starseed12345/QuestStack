@@ -169,6 +169,39 @@ internal sealed class FastbootUsbDevice : IDisposable
         return info.Count == 0 ? null : info;
     }
 
+    internal static string? ParseVariableResponse(string responseText, string variableName)
+    {
+        string? okayValue = null;
+
+        foreach (string rawLine in responseText.Replace("\r", string.Empty).Split('\n'))
+        {
+            string line = rawLine.Trim();
+            if (line.StartsWith("OKAY", StringComparison.Ordinal))
+            {
+                string value = line[4..].Trim();
+                if (value.Length > 0)
+                    okayValue = value;
+                continue;
+            }
+
+            if (line.StartsWith("INFO", StringComparison.Ordinal))
+                line = line[4..].Trim();
+
+            if (line.StartsWith("(bootloader)", StringComparison.OrdinalIgnoreCase))
+                line = line[12..].Trim();
+
+            string prefix = variableName + ":";
+            if (!line.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            string valueAfterPrefix = line[prefix.Length..].Replace("OKAY", string.Empty).Trim();
+            if (valueAfterPrefix.Length > 0)
+                return valueAfterPrefix;
+        }
+
+        return okayValue;
+    }
+
     public void ClearReadBuffer()
     {
         lock (_readBufferLock)

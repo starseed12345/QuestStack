@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
+    <Version>3.0.4</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PublishSingleFile>true</PublishSingleFile>
@@ -13,8 +14,11 @@
     <DebugType>None</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <IncludeSymbols>false</IncludeSymbols>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
     <PackageReference Include="LibUsbDotNet" Version="2.2.85" />
     <PackageReference Include="SharpCompress" Version="0.50.1" />
     <PackageReference Include="UsbDotNet.LibUsbNative" Version="1.3.1" />
@@ -24,6 +28,11 @@
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
     <EmbeddedResource Include="tools\platform-tools\win-x64\adb.exe" LogicalName="QuestStack.PlatformTools.adb.exe" />
+    <EmbeddedResource Include="tools\platform-tools\win-x64\fastboot.exe" LogicalName="QuestStack.PlatformTools.fastboot.exe" />
+    <EmbeddedResource Include="tools\platform-tools\win-x64\mke2fs.exe" LogicalName="QuestStack.PlatformTools.mke2fs.exe" />
+    <EmbeddedResource Include="tools\platform-tools\win-x64\mke2fs.conf" LogicalName="QuestStack.PlatformTools.mke2fs.conf" />
+    <EmbeddedResource Include="tools\platform-tools\win-x64\make_f2fs.exe" LogicalName="QuestStack.PlatformTools.make_f2fs.exe" />
+    <EmbeddedResource Include="tools\platform-tools\win-x64\make_f2fs_casefold.exe" LogicalName="QuestStack.PlatformTools.make_f2fs_casefold.exe" />
     <EmbeddedResource Include="tools\platform-tools\win-x64\AdbWinApi.dll" LogicalName="QuestStack.PlatformTools.AdbWinApi.dll" />
     <EmbeddedResource Include="tools\platform-tools\win-x64\AdbWinUsbApi.dll" LogicalName="QuestStack.PlatformTools.AdbWinUsbApi.dll" />
     <EmbeddedResource Include="tools\platform-tools\win-x64\libwinpthread-1.dll" LogicalName="QuestStack.PlatformTools.libwinpthread-1.dll" />
@@ -31,10 +40,20 @@
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
     <EmbeddedResource Include="tools\platform-tools\linux-x64\adb" LogicalName="QuestStack.PlatformTools.adb" />
+    <EmbeddedResource Include="tools\platform-tools\linux-x64\fastboot" LogicalName="QuestStack.PlatformTools.fastboot" />
+    <EmbeddedResource Include="tools\platform-tools\linux-x64\mke2fs" LogicalName="QuestStack.PlatformTools.mke2fs" />
+    <EmbeddedResource Include="tools\platform-tools\linux-x64\mke2fs.conf" LogicalName="QuestStack.PlatformTools.mke2fs.conf" />
+    <EmbeddedResource Include="tools\platform-tools\linux-x64\make_f2fs" LogicalName="QuestStack.PlatformTools.make_f2fs" />
+    <EmbeddedResource Include="tools\platform-tools\linux-x64\make_f2fs_casefold" LogicalName="QuestStack.PlatformTools.make_f2fs_casefold" />
     <EmbeddedResource Include="tools\platform-tools\linux-x64\NOTICE.txt" LogicalName="QuestStack.PlatformTools.NOTICE.txt" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' or '$(RuntimeIdentifier)' == 'osx-arm64'">
     <EmbeddedResource Include="tools\platform-tools\osx-universal\adb" LogicalName="QuestStack.PlatformTools.adb" />
+    <EmbeddedResource Include="tools\platform-tools\osx-universal\fastboot" LogicalName="QuestStack.PlatformTools.fastboot" />
+    <EmbeddedResource Include="tools\platform-tools\osx-universal\mke2fs" LogicalName="QuestStack.PlatformTools.mke2fs" />
+    <EmbeddedResource Include="tools\platform-tools\osx-universal\mke2fs.conf" LogicalName="QuestStack.PlatformTools.mke2fs.conf" />
+    <EmbeddedResource Include="tools\platform-tools\osx-universal\make_f2fs" LogicalName="QuestStack.PlatformTools.make_f2fs" />
+    <EmbeddedResource Include="tools\platform-tools\osx-universal\make_f2fs_casefold" LogicalName="QuestStack.PlatformTools.make_f2fs_casefold" />
     <EmbeddedResource Include="tools\platform-tools\osx-universal\NOTICE.txt" LogicalName="QuestStack.PlatformTools.NOTICE.txt" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
@@ -44,4 +63,10 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+  <Target Name="RemovePublishedSymbols" AfterTargets="Publish">
+    <ItemGroup>
+      <QuestStackPublishedSymbols Include="$(PublishDir)**\*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(QuestStackPublishedSymbols)" />
+  </Target>
 </Project>
