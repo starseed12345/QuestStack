@@ -1,6 +1,6 @@
 # QuestStack
 
-QuestStack is a Meta Quest 1 root and bootloader unlocking project.
+QuestStack is a Meta Quest root and bootloader unlocking project.
 
 Using the GhostLock privilege escalation chain and the CVE-2021-1931 ABL/fastboot vulnerability, QuestStack provides a way to gain root access on the latest Quest 1 firmware, temporarily boot using a vulnerable ABL, and unlock the device bootloader.
 
@@ -22,10 +22,11 @@ The current version includes a full graphical interface, automatic device detect
 
 * ✅ Quest 1
 * ✅ Firmware: `49845030443200410` (Latest)
+* ✅ Quest 2 (Website version Only)
+* ✅ Firmware: `50670960048600150`
 
 ### Not Supported
 
-* ❌ Quest 2
 * ❌ Quest Pro
 * ❌ Any other headset
 
@@ -45,27 +46,17 @@ The website version is a separate implementation and does not necessarily provid
 
 ## Requirements
 
-Your Quest 1 must be running:
-
-```text
-49845030443200410
-```
-
-You can check your currently installed firmware version using:
-
-```bash
-adb shell getprop ro.build.version.incremental
-```
-
 If your device is not on the required firmware version, reboot into **USB Update Mode** and sideload the required firmware package:
 
 https://files.cocaine.trade/firmware/meta/Quest/q1_49845030443200410.zip
+
+https://files.cocaine.trade/firmware/meta/Quest%202/q2_50670960048600150.zip
 
 After installing the firmware, boot the headset normally and make sure ADB / USB debugging is enabled.
 
 ## Instructions
 
-1. Boot the Quest 1 normally.
+1. Boot the Quest normally.
 2. Connect it to your computer using USB.
 3. Allow USB debugging if prompted.
 4. Launch QuestStack.
@@ -85,7 +76,7 @@ QuestStack handles the rest of the process automatically.
 During the full process, QuestStack will:
 
 1. Detect the connected headset.
-2. Verify that it is a supported Quest 1.
+2. Verify that it is a supported Quest.
 3. Verify the required firmware and device fingerprint.
 4. Detect the currently active A/B slot.
 5. Download and verify the required files.
@@ -188,7 +179,7 @@ If you're looking for help consider joining this server:
 
 https://discord.gg/6JSH88u2Rd
 
-You can also find discussion about Quest 1 modifications, 90 Hz, recovery, and other experiments there.
+You can also find discussion about Quest modifications, 90 Hz, recovery, and other experiments there.
 
 ## Speculations
 
@@ -200,7 +191,7 @@ Built using research and tools from the Android security and VR development comm
 
 https://github.com/darknight1050/quest-bootloader-unlocker
 
-Additional credit goes to the researchers and developers behind GhostLock, ionstack, and the other work that made modern Quest 1 root and bootloader unlocking possible.
+Additional credit goes to the researchers and developers behind GhostLock, ionstack, and the other work that made modern Quest root and bootloader unlocking possible.
 
 ## License
 
