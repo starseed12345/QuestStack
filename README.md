@@ -183,7 +183,7 @@ You can also find discussion about Quest modifications, 90 Hz, recovery, and oth
 
 ## Speculations
 
-Quest 2 Devices running V59 or lower have a similar chance of having this work as intended to unlock the bootloader but the chance of bricking outweighs the benefit of unlocking the bootloader, This remains a future goal and will not be ignored
+None at the moment.
 
 ## Credits
 
