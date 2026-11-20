@@ -54,6 +54,12 @@ https://files.cocaine.trade/firmware/meta/Quest%202/q2_50670960048600150.zip
 
 After installing the firmware, boot the headset normally and make sure ADB / USB debugging is enabled.
 
+You may also need the **oculus adb drivers** on windows:
+
+https://developers.meta.com/vr/downloads/package/oculus-adb-drivers/
+
+unzip, right click the .inf, then click install.
+
 ## Instructions
 
 1. Boot the Quest normally.
